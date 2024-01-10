@@ -10,8 +10,12 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-community/slider": "^4.5.0",
+    "@shopify/react-native-skia": "^0.1.233",
     "react": "18.2.0",
-    "react-native": "0.73.2"
+    "react-native": "0.73.2",
+    "react-native-gesture-handler": "^2.14.0",
+    "react-native-reanimated": "^3.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
