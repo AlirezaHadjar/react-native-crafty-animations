@@ -28,9 +28,12 @@ export const Phyllotaxis: React.FC<PhyllotaxisProps> = ({}) => {
   const [points, setPoints] = React.useState<
     {x: number; y: number; a: number; n: number}[]
   >([]);
-  const [mode, setMode] = React.useState<1 | 2 | 3>(1);
+  const [mode, setMode] = React.useState<1 | 2 | 3 | null>(null);
 
   useEffect(() => {
+    if (mode === null) {
+      return;
+    }
     setPoints([]);
     const interval = setInterval(() => {
       setPoints(prev => {
@@ -62,7 +65,13 @@ export const Phyllotaxis: React.FC<PhyllotaxisProps> = ({}) => {
         })}
       </Canvas>
       <View
-        style={{position: 'absolute', bottom: 50, alignSelf: 'center', gap: 8}}>
+        style={{
+          position: 'absolute',
+          bottom: 50,
+          alignSelf: 'center',
+          gap: 8,
+          flexDirection: 'row',
+        }}>
         <Button
           title={'Mode 1'}
           color={mode !== 1 ? 'grey' : 'white'}
