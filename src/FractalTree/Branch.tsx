@@ -79,7 +79,7 @@ export const Branch: React.FC<BranchProps> = ({
   const displayLeaves = level === limit;
   const progress = useSharedValue(0);
   const randomNewBranches = useSharedValue(
-    Math.floor(getRandomValue(3, 3) / Math.max(level * 0.3, 1)),
+    Math.floor(getRandomValue(2, 3) / Math.max(level * 0.3, 1)),
   );
 
   const animatedEnd = useDerivedValue(() => {

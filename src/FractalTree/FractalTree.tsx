@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
 export const FractalTree: React.FC<FractalTreeProps> = ({}) => {
   const {width, height} = useWindowDimensions();
   const color = 'brown';
-  const limit = 6;
+  const limit = 5;
   const ref = useRef<BranchRef>(null);
   const [maxLevel, setMaxLevel] = useState(1);
 
