@@ -28,7 +28,11 @@ const getInitialVelocity = (initialized?: boolean) => {
   if (!initialized) {
     return {x: 0, y: 0};
   }
-  return {x: getRandomValue(-2, 2), y: getRandomValue(-2, 2)} as SkPoint;
+  const range = 1.5;
+  return {
+    x: getRandomValue(-range, range),
+    y: getRandomValue(-range, range),
+  } as SkPoint;
 };
 
 export const FlameParticle: React.FC<FlameParticleProps> = ({
@@ -50,9 +54,12 @@ export const FlameParticle: React.FC<FlameParticleProps> = ({
     }
     positionX.value += velocity.value.x;
     positionY.value += velocity.value.y;
-    const newVelocity = velocity.value.y + acceleration.value;
+    const newVelocityY = velocity.value.y + acceleration.value;
+    const newVelocityX =
+      velocity.value.x -
+      0.05 * acceleration.value * (velocity.value.x > 0 ? 1 : -1);
 
-    velocity.value = vec(velocity.value.x, newVelocity);
+    velocity.value = vec(newVelocityX, newVelocityY);
   });
 
   const changeFrameState = (state: boolean) => {

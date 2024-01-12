@@ -21,7 +21,6 @@ const getRandomValue = (min: number, max: number) => {
   return Math.random() * (max - min) + min;
 };
 
-const radius = 5;
 const gravity = 0.01;
 
 function getRandomColor() {
@@ -37,12 +36,13 @@ function getRandomColor() {
   return rgbColor;
 }
 
-const FLAME_PARTICLES = new Array(40).fill(0);
+const FLAME_PARTICLES = new Array(30).fill(0);
 const OPACITY_VEL_DEC = 0.02;
 
 export const Particle: React.FC<ParticleProps> = ({x, y}) => {
   const {width, height} = useWindowDimensions();
-  const velocity = useSharedValue(vec(0, getRandomValue(-17, 5)));
+  const radius = useSharedValue(getRandomValue(3, 5));
+  const velocity = useSharedValue(vec(0, getRandomValue(-20, -5)));
   const acceleration = useSharedValue(0);
   const positionX = useSharedValue(x);
   const color = useSharedValue(getRandomColor());
@@ -51,20 +51,22 @@ export const Particle: React.FC<ParticleProps> = ({x, y}) => {
   const opacity = useDerivedValue(() => (exploded.value ? 0 : 1), [exploded]);
   const flamesOpacity = useSharedValue(0);
   const flamesAcceleration = useSharedValue(0);
-  const flamesRadius = useDerivedValue(() =>
-    interpolate(flamesOpacity.value, [0, 1], [0, radius / 2]),
+  const flamesRadius = useDerivedValue(
+    () => interpolate(flamesOpacity.value, [0, 1], [0, radius.value / 2]),
+    [flamesOpacity, radius],
   );
 
   useFrameCallback(() => {
-    positionX.value += velocity.value.x;
-    positionY.value += velocity.value.y;
-    const newVelocity = velocity.value.y + acceleration.value;
-
-    velocity.value = vec(velocity.value.x, newVelocity);
-    flamesAcceleration.value += gravity;
-    acceleration.value += gravity;
+    if (!exploded.value) {
+      positionX.value += velocity.value.x;
+      positionY.value += velocity.value.y;
+      const newVelocity = velocity.value.y + acceleration.value;
+      velocity.value = vec(velocity.value.x, newVelocity);
+      acceleration.value += gravity;
+    }
 
     if (velocity.value.y >= 0 && !exploded.value) {
+      flamesAcceleration.value = acceleration.value * 0.2;
       exploded.value = true;
       flamesOpacity.value = 1;
     }
@@ -79,9 +81,10 @@ export const Particle: React.FC<ParticleProps> = ({x, y}) => {
       flamesAcceleration.value = 0;
       exploded.value = false;
       positionX.value = getRandomValue(0, width);
+      radius.value = getRandomValue(3, 5);
       color.value = getRandomColor();
       positionY.value = height;
-      velocity.value = vec(0, getRandomValue(-17, -5));
+      velocity.value = vec(0, getRandomValue(-20, -5));
       acceleration.value = 0;
     }
   });

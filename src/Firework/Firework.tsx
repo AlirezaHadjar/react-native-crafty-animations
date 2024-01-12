@@ -11,7 +11,7 @@ const getRandomValue = (min: number, max: number) => {
   return Math.random() * (max - min) + min;
 };
 
-const PARTICLES_ARRAY = new Array(1).fill(0);
+const PARTICLES_ARRAY = new Array(5).fill(0);
 
 export const Firework: React.FC<FireworkProps> = ({}) => {
   const {width, height} = useWindowDimensions();
