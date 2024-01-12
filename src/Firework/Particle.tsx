@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {Circle, vec} from '@shopify/react-native-skia';
 import React from 'react';
 import {useWindowDimensions} from 'react-native';
 import {
   interpolate,
-  useAnimatedStyle,
   useDerivedValue,
   useFrameCallback,
   useSharedValue,
@@ -36,8 +34,8 @@ function getRandomColor() {
   return rgbColor;
 }
 
-const FLAME_PARTICLES = new Array(30).fill(0);
-const OPACITY_VEL_DEC = 0.02;
+const FLAME_PARTICLES = new Array(40).fill(0);
+const OPACITY_VEL_DEC = 0.013;
 
 export const Particle: React.FC<ParticleProps> = ({x, y}) => {
   const {width, height} = useWindowDimensions();
