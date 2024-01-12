@@ -1,25 +1,19 @@
-import {Circle, SkPoint, vec} from '@shopify/react-native-skia';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {Circle, vec} from '@shopify/react-native-skia';
 import React from 'react';
 import {useWindowDimensions} from 'react-native';
 import {
-  SharedValue,
   interpolate,
-  runOnJS,
-  useAnimatedReaction,
+  useAnimatedStyle,
   useDerivedValue,
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
+import {FlameParticle} from './FlameParticle';
 
 type ParticleProps = {
   x: number;
   y: number;
-  firework?: boolean;
-  index: number;
-  color?: string;
-  initialized?: SharedValue<boolean>;
-  animatedX?: SharedValue<number>;
-  animatedY?: SharedValue<number>;
 };
 
 const getRandomValue = (min: number, max: number) => {
@@ -29,17 +23,6 @@ const getRandomValue = (min: number, max: number) => {
 
 const radius = 5;
 const gravity = 0.01;
-
-const getInitialVelocity = (firework?: boolean, initialized?: boolean) => {
-  'worklet';
-  if (!initialized) {
-    return {x: 0, y: 0};
-  }
-  if (firework) {
-    return {x: 0, y: getRandomValue(-17, -5)} as SkPoint;
-  }
-  return {x: getRandomValue(-2, 2), y: getRandomValue(-2, 2)} as SkPoint;
-};
 
 function getRandomColor() {
   'worklet';
@@ -54,55 +37,47 @@ function getRandomColor() {
   return rgbColor;
 }
 
-const NEW_PARTICLES = new Array(40).fill(0);
+const FLAME_PARTICLES = new Array(40).fill(0);
+const OPACITY_VEL_DEC = 0.02;
 
-export const Particle: React.FC<ParticleProps> = ({
-  x,
-  y,
-  firework,
-  color: _color,
-  initialized,
-  animatedX,
-  animatedY,
-}) => {
+export const Particle: React.FC<ParticleProps> = ({x, y}) => {
   const {width, height} = useWindowDimensions();
-  const velocity = useSharedValue(
-    getInitialVelocity(firework, initialized?.value),
-  );
+  const velocity = useSharedValue(vec(0, getRandomValue(-17, 5)));
   const acceleration = useSharedValue(0);
   const positionX = useSharedValue(x);
-  const color = useSharedValue(_color || getRandomColor());
+  const color = useSharedValue(getRandomColor());
   const positionY = useSharedValue(y);
   const exploded = useSharedValue(false);
-  const opacity = useSharedValue(1);
-  const aRadius = useDerivedValue(() =>
-    interpolate(opacity.value, [0, 1], [0, radius / 2]),
+  const opacity = useDerivedValue(() => (exploded.value ? 0 : 1), [exploded]);
+  const flamesOpacity = useSharedValue(0);
+  const flamesAcceleration = useSharedValue(0);
+  const flamesRadius = useDerivedValue(() =>
+    interpolate(flamesOpacity.value, [0, 1], [0, radius / 2]),
   );
 
-  const frame = useFrameCallback(() => {
-    if (!initialized?.value) {
-      return;
-    }
+  useFrameCallback(() => {
     positionX.value += velocity.value.x;
     positionY.value += velocity.value.y;
-    let newVelocity = velocity.value.y + acceleration.value;
-    if (exploded.value) {
-      newVelocity *= 0.8;
-    }
+    const newVelocity = velocity.value.y + acceleration.value;
+
     velocity.value = vec(velocity.value.x, newVelocity);
+    flamesAcceleration.value += gravity;
     acceleration.value += gravity;
 
-    if (velocity.value.y >= 0 && !exploded.value && firework) {
+    if (velocity.value.y >= 0 && !exploded.value) {
       exploded.value = true;
-      opacity.value = 0;
-    }
-    if (!firework) {
-      opacity.value -= 0.03;
+      flamesOpacity.value = 1;
     }
 
-    if (positionY.value > height && firework) {
+    if (exploded.value && flamesOpacity.value > 0) {
+      flamesOpacity.value = Math.max(flamesOpacity.value - OPACITY_VEL_DEC, 0);
+    }
+
+    const done = exploded.value && flamesOpacity.value === 0;
+
+    if (positionY.value > height || done) {
+      flamesAcceleration.value = 0;
       exploded.value = false;
-      opacity.value = 1;
       positionX.value = getRandomValue(0, width);
       color.value = getRandomColor();
       positionY.value = height;
@@ -111,53 +86,27 @@ export const Particle: React.FC<ParticleProps> = ({
     }
   });
 
-  const changeFrameState = (state: boolean) => {
-    if (frame.isActive !== state) {
-      if (state && !frame.isActive) {
-        velocity.value = getInitialVelocity(firework, true);
-        positionX.value = animatedX?.value || x;
-        positionY.value = animatedY?.value || y;
-      }
-      if (!state && frame.isActive) {
-        velocity.value = getInitialVelocity(firework, false);
-        acceleration.value = 0;
-        opacity.value = 1;
-      }
-      frame.setActive(state);
-    }
-  };
-
-  useAnimatedReaction(
-    () => initialized?.value,
-    value => {
-      const state = value ? true : false;
-      runOnJS(changeFrameState)(state);
-    },
-  );
-
   return (
     <>
       <Circle
         cx={positionX}
         cy={positionY}
-        r={firework ? radius : aRadius}
+        r={radius}
         color={color}
         opacity={opacity}
       />
-      {firework &&
-        NEW_PARTICLES.map((_, index) => (
-          <Particle
-            key={index}
-            x={positionX.value}
-            y={positionY.value}
-            animatedX={positionX}
-            animatedY={positionY}
-            color={color.value}
-            index={index}
-            firework={false}
-            initialized={exploded}
-          />
-        ))}
+      {FLAME_PARTICLES.map((_, index) => (
+        <FlameParticle
+          key={index}
+          parentX={positionX}
+          parentY={positionY}
+          color={color}
+          visible={exploded}
+          radius={flamesRadius}
+          opacity={flamesOpacity}
+          acceleration={flamesAcceleration}
+        />
+      ))}
     </>
   );
 };
