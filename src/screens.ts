@@ -1,4 +1,5 @@
 import {Firework} from './Examples/Firework';
+import {FlappyBird} from './Examples/FlappyBird';
 import {FractalTree} from './Examples/FractalTree';
 import {Phyllotaxis} from './Examples/Phyllotaxis';
 import {Starfield} from './Examples/Starfield';
@@ -30,5 +31,10 @@ export const ExampleScreens: Screen[] = [
     name: 'Starfield',
     title: '✨ Starfield',
     component: Starfield,
+  },
+  {
+    name: 'FlappyBird',
+    title: '🐦 Flappy Bird',
+    component: FlappyBird,
   },
 ];
