@@ -944,6 +944,8 @@ PODS:
   - React-Mapbuffer (0.73.2):
     - glog
     - React-debug
+  - react-native-safe-area-context (4.8.2):
+    - React-Core
   - react-native-skia (0.1.233):
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -1130,6 +1132,10 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - ReactCommon/turbomodule/core
+  - RNScreens (3.29.0):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
   - SocketRocket (0.6.1)
   - Yoga (1.14.0)
 
@@ -1186,6 +1192,7 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector-modern`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
+  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
@@ -1210,6 +1217,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
+  - RNScreens (from `../node_modules/react-native-screens`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1284,6 +1292,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/logger"
   React-Mapbuffer:
     :path: "../node_modules/react-native/ReactCommon"
+  react-native-safe-area-context:
+    :path: "../node_modules/react-native-safe-area-context"
   react-native-skia:
     :path: "../node_modules/@shopify/react-native-skia"
   react-native-slider:
@@ -1332,6 +1342,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
+  RNScreens:
+    :path: "../node_modules/react-native-screens"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -1375,6 +1387,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 03644c063fc3621c9a4e8bf263a8150909129618
   React-logger: 66b168e2b2bee57bd8ce9e69f739d805732a5570
   React-Mapbuffer: 9ee041e1d7be96da6d76a251f92e72b711c651d6
+  react-native-safe-area-context: 0ee144a6170530ccc37a0fd9388e28d06f516a89
   react-native-skia: db297114b290067ffbe89e327024264a5af6662f
   react-native-slider: 7d387c7e8dd0b4c12bf49c975c8666435f082a33
   React-nativeconfig: d753fbbc8cecc8ae413d615599ac378bbf6999bb
@@ -1399,6 +1412,7 @@ SPEC CHECKSUMS:
   ReactCommon: 45b5d4f784e869c44a6f5a8fad5b114ca8f78c53
   RNGestureHandler: 61bfdfc05db9b79dd61f894dcd29d3dcc6db3c02
   RNReanimated: 57f436e7aa3d277fbfed05e003230b43428157c0
+  RNScreens: b582cb834dc4133307562e930e8fa914b8c04ef2
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 13c8ef87792450193e117976337b8527b49e8c03
 

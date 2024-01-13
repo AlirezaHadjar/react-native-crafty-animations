@@ -4,7 +4,7 @@
 
 import 'react-native';
 import React from 'react';
-import App from '../src/Starfield/Starfield';
+import App from '../src/Examples/Starfield/Starfield';
 
 // Note: import explicitly to use the types shipped with jest.
 import {it} from '@jest/globals';
