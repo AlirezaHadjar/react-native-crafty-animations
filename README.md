@@ -12,6 +12,12 @@ https://github.com/AlirezaHadjar/react-native-creative-animations/assets/5719240
 
 https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/e4f9abf2-5c6b-457f-90f9-c446c83122ac
 
+🎇 Firework
+
+https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/82501576-ba6a-46fe-8718-c3c877b29dda
+
+
+
 
 
 
