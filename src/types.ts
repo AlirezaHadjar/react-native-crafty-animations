@@ -4,4 +4,5 @@ export type StackParamList = {
   FractalTree: undefined;
   Phyllotaxis: undefined;
   Starfield: undefined;
+  FlappyBird: undefined;
 };
