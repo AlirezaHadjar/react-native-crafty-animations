@@ -1,26 +1,30 @@
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
   Canvas,
   Extrapolate,
   Image,
-  Text,
   Transforms3d,
   add,
-  useFont,
   useImage,
   vec,
 } from '@shopify/react-native-skia';
-import React, {useEffect} from 'react';
-import {StyleSheet, View, useWindowDimensions} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
-import {
+import Animated, {
+  FlipInXDown,
+  FlipInXUp,
   interpolate,
+  runOnJS,
   useDerivedValue,
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
 import {ObstacleType, Pillar} from './types';
 import {Obstacle} from './Obstacle';
+import usePrevious from '../../hooks/previous';
+import {isNil} from '../../utils/nil';
 
 type FlappyBirdProps = {};
 
@@ -86,8 +90,13 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
   const backgroundPositionX = useSharedValue(0);
   const firstObstacle = useSharedValue<ObstacleType | null>(null);
   const secondObstacle = useSharedValue<ObstacleType | null>(null);
-  const font = useFont(require('../../../Roboto-Bold.ttf'), 24);
-  const score = useSharedValue(0);
+  const [score, setScore] = useState(0);
+  const prevScore = usePrevious(score);
+
+  const enteringAnimation =
+    !isNil(prevScore) && prevScore < score
+      ? FlipInXDown.springify()
+      : FlipInXUp.springify();
   const state = useSharedValue<'running' | 'stop'>('stop');
 
   const jump = () => {
@@ -146,9 +155,9 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     if (passedObstacle) {
       if (newObstacle.calculated === false) {
         if (newObstacle.hit === false) {
-          score.value += 1;
+          runOnJS(setScore)(score + 1);
         } else {
-          score.value = 0;
+          runOnJS(setScore)(0);
         }
         newObstacle = {...newObstacle, calculated: true};
       }
@@ -220,10 +229,6 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     ];
   });
 
-  const scoreText = useDerivedValue(() => {
-    return `Score: ${score.value}`;
-  }, [score]);
-
   useEffect(() => {
     setTimeout(() => {
       state.value = 'running';
@@ -247,9 +252,35 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
             height={BIRD_SIZE}
             transform={transform}
           />
-          <Text font={font} x={10} y={100} text={scoreText} color={'white'} />
         </Canvas>
       </GestureDetector>
+      <View
+        style={{
+          position: 'absolute',
+          top: 100,
+          alignSelf: 'center',
+          flexDirection: 'row',
+          alignContent: 'center',
+        }}>
+        <Text
+          style={{
+            color: 'white',
+            fontSize: 30,
+            fontWeight: '800',
+          }}>
+          {'Score: '}
+        </Text>
+        <Animated.View entering={enteringAnimation} key={score}>
+          <Text
+            style={{
+              color: 'white',
+              fontSize: 30,
+              fontWeight: '800',
+            }}>
+            {score}
+          </Text>
+        </Animated.View>
+      </View>
     </View>
   );
 };
