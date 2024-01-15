@@ -25,6 +25,7 @@ import {ObstacleType, Pillar} from './types';
 import {Obstacle} from './Obstacle';
 import usePrevious from '../../hooks/previous';
 import {isNil} from '../../utils/nil';
+import {Ground} from './Ground';
 
 type FlappyBirdProps = {};
 
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-const gravity = vec(0, 0.3);
+const gravity = vec(0, 0.5);
 const BIRD_SIZE = 50;
 const backgroundColor = 'rgb(73, 204, 235)';
 const minGap = 200;
@@ -41,6 +42,7 @@ const maxGap = 300;
 const minObstacleDiffX = 200;
 const maxObstacleDiffX = 400;
 const obstacleWidth = 50;
+const groundHeight = 50;
 
 const getRandomValue = (min: number, max: number) => {
   'worklet';
@@ -115,7 +117,7 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     'worklet';
 
     if (!prev) {
-      return generateRandomObstacle(obstacleWidth, height, width);
+      return generateRandomObstacle(obstacleWidth, height, width + 200);
     }
 
     const x =
@@ -136,6 +138,12 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     secondObstacle.value = second;
   };
 
+  const onLost = () => {
+    'worklet';
+    state.value = 'stop';
+    runOnJS(setScore)(0);
+  };
+
   const updateScore = (obstacle: ObstacleType) => {
     'worklet';
     let newObstacle = {...obstacle};
@@ -149,6 +157,7 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
 
     if (isInBetweenHorizontally && !isInBetweenVertically && !newObstacle.hit) {
       newObstacle = {...newObstacle, hit: true};
+      onLost();
     }
     const passedObstacle = positionX.value > x + newObstacle.top.width;
 
@@ -156,8 +165,6 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
       if (newObstacle.calculated === false) {
         if (newObstacle.hit === false) {
           runOnJS(setScore)(score + 1);
-        } else {
-          runOnJS(setScore)(0);
         }
         newObstacle = {...newObstacle, calculated: true};
       }
@@ -205,8 +212,8 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     positionY.value += velocity.value.y;
     velocity.value = add(velocity.value, acceleration.value);
 
-    if (positionY.value > height) {
-      jump();
+    if (positionY.value > height - groundHeight - BIRD_SIZE) {
+      onLost();
     }
   });
 
@@ -244,8 +251,10 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     <View style={styles.container}>
       <GestureDetector gesture={tap}>
         <Canvas style={{width, height, backgroundColor}}>
+          <Ground height={groundHeight} />
           <Obstacle obstacle={firstObstacle} positionX={backgroundPositionX} />
           <Obstacle obstacle={secondObstacle} positionX={backgroundPositionX} />
+          {/* <Rect width={BIRD_SIZE} height={BIRD_SIZE} transform={transform} /> */}
           <Image
             image={image}
             width={BIRD_SIZE}
