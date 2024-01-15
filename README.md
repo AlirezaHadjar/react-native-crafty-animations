@@ -16,10 +16,9 @@ https://github.com/AlirezaHadjar/react-native-creative-animations/assets/5719240
 
 https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/82501576-ba6a-46fe-8718-c3c877b29dda
 
+🐦 Flappy Bird
 
-
-
-
+https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/5994a53d-600a-438d-aa6c-e9bd0a9c9eeb
 
 
 
