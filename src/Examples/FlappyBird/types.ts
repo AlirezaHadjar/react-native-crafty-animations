@@ -9,4 +9,5 @@ export type ObstacleType = {
   top: Pillar;
   bottom: Pillar;
   hit: boolean;
+  calculated: boolean;
 };

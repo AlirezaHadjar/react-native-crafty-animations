@@ -1,25 +1,31 @@
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Canvas,
   Extrapolate,
   Image,
-  Text,
   Transforms3d,
   add,
-  useFont,
   useImage,
   vec,
 } from '@shopify/react-native-skia';
-import React, {useEffect} from 'react';
-import {StyleSheet, View, useWindowDimensions} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
-import {
+import Animated, {
+  FlipInXDown,
+  FlipInXUp,
   interpolate,
+  runOnJS,
   useDerivedValue,
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
 import {ObstacleType, Pillar} from './types';
 import {Obstacle} from './Obstacle';
+import usePrevious from '../../hooks/previous';
+import {isNil} from '../../utils/nil';
+import {Ground} from './Ground';
 
 type FlappyBirdProps = {};
 
@@ -28,7 +34,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-const gravity = vec(0, 0.3);
+const gravity = vec(0, 0.5);
 const BIRD_SIZE = 50;
 const backgroundColor = 'rgb(73, 204, 235)';
 const minGap = 200;
@@ -36,6 +42,7 @@ const maxGap = 300;
 const minObstacleDiffX = 200;
 const maxObstacleDiffX = 400;
 const obstacleWidth = 50;
+const groundHeight = 50;
 
 const getRandomValue = (min: number, max: number) => {
   'worklet';
@@ -72,6 +79,7 @@ const generateRandomObstacle = (
     top: top,
     bottom: bottom,
     hit: false,
+    calculated: false,
   };
 };
 
@@ -84,8 +92,13 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
   const backgroundPositionX = useSharedValue(0);
   const firstObstacle = useSharedValue<ObstacleType | null>(null);
   const secondObstacle = useSharedValue<ObstacleType | null>(null);
-  const font = useFont(require('../../../Roboto-Bold.ttf'), 24);
-  const lives = useSharedValue(10);
+  const [score, setScore] = useState(0);
+  const prevScore = usePrevious(score);
+
+  const enteringAnimation =
+    !isNil(prevScore) && prevScore < score
+      ? FlipInXDown.springify()
+      : FlipInXUp.springify();
   const state = useSharedValue<'running' | 'stop'>('stop');
 
   const jump = () => {
@@ -100,18 +113,64 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     jump();
   });
 
+  const getNewObstacle = (prev?: ObstacleType | null) => {
+    'worklet';
+
+    if (!prev) {
+      return generateRandomObstacle(obstacleWidth, height, width + 200);
+    }
+
+    const x =
+      prev.top.startX +
+      prev.top.width +
+      getRandomValue(minObstacleDiffX, maxObstacleDiffX);
+
+    return generateRandomObstacle(obstacleWidth, height, x);
+  };
+
   const initializeObstacles = () => {
     'worklet';
 
-    const first = generateRandomObstacle(obstacleWidth, height, width);
-    const x =
-      first.top.startX +
-      obstacleWidth +
-      getRandomValue(minObstacleDiffX, maxObstacleDiffX);
-    const second = generateRandomObstacle(obstacleWidth, height, x);
+    const first = getNewObstacle();
+    const second = getNewObstacle(first);
 
     firstObstacle.value = first;
     secondObstacle.value = second;
+  };
+
+  const onLost = () => {
+    'worklet';
+    state.value = 'stop';
+    runOnJS(setScore)(0);
+  };
+
+  const updateScore = (obstacle: ObstacleType) => {
+    'worklet';
+    let newObstacle = {...obstacle};
+    const x = newObstacle.top.startX + backgroundPositionX.value;
+    const isInBetweenHorizontally =
+      positionX.value + BIRD_SIZE > x &&
+      positionX.value < x + newObstacle.top.width;
+    const isInBetweenVertically =
+      positionY.value > newObstacle.top.height &&
+      positionY.value + BIRD_SIZE < newObstacle.bottom.startY;
+
+    if (isInBetweenHorizontally && !isInBetweenVertically && !newObstacle.hit) {
+      newObstacle = {...newObstacle, hit: true};
+      onLost();
+    }
+    const passedObstacle = positionX.value > x + newObstacle.top.width;
+
+    if (passedObstacle) {
+      if (newObstacle.calculated === false) {
+        if (newObstacle.hit === false) {
+          runOnJS(setScore)(score + 1);
+        }
+        newObstacle = {...newObstacle, calculated: true};
+      }
+    }
+
+    return newObstacle;
   };
 
   useFrameCallback(() => {
@@ -123,72 +182,38 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     if (!first && !second) {
       initializeObstacles();
     }
-    // const startWindowX = backgroundPositionX.value;
-    // const endWindowX = backgroundPositionX.value - width;
 
     if (first) {
       const x = first.top.startX + backgroundPositionX.value;
       const isLeftWindow = x + first.top.width < 0;
+      let newFirst = first;
 
-      if (isLeftWindow && second) {
-        const newX =
-          second.top.startX +
-          obstacleWidth +
-          getRandomValue(minObstacleDiffX, maxObstacleDiffX);
-
-        firstObstacle.value = generateRandomObstacle(
-          obstacleWidth,
-          height,
-          newX,
-        );
+      newFirst = updateScore(newFirst);
+      if (isLeftWindow) {
+        newFirst = getNewObstacle(second);
       }
-      const isInBetweenHorizontally =
-        positionX.value + BIRD_SIZE > x &&
-        positionX.value < x + first.top.width;
-      const isInBetweenVertically =
-        positionY.value > first.top.height &&
-        positionY.value + BIRD_SIZE < first.bottom.startY;
 
-      if (isInBetweenHorizontally && !isInBetweenVertically && !first.hit) {
-        firstObstacle.value = {...first, hit: true};
-        lives.value -= 1;
-      }
+      firstObstacle.value = newFirst;
     }
     if (second) {
       const x = second.top.startX + backgroundPositionX.value;
       const isLeftWindow = x + second.top.width < 0;
+      let newSecond = second;
 
-      if (isLeftWindow && first) {
-        const newX =
-          first.top.startX +
-          obstacleWidth +
-          getRandomValue(minObstacleDiffX, maxObstacleDiffX);
-
-        secondObstacle.value = generateRandomObstacle(
-          obstacleWidth,
-          height,
-          newX,
-        );
+      newSecond = updateScore(newSecond);
+      if (isLeftWindow) {
+        newSecond = getNewObstacle(first);
       }
-      const isInBetweenHorizontally =
-        positionX.value + BIRD_SIZE > x &&
-        positionX.value < x + second.top.width;
-      const isInBetweenVertically =
-        positionY.value > second.top.height &&
-        positionY.value + BIRD_SIZE < second.bottom.startY;
 
-      if (isInBetweenHorizontally && !isInBetweenVertically && !second.hit) {
-        secondObstacle.value = {...second, hit: true};
-        lives.value -= 1;
-      }
+      secondObstacle.value = newSecond;
     }
     backgroundPositionX.value -= 4;
     positionX.value += velocity.value.x;
     positionY.value += velocity.value.y;
     velocity.value = add(velocity.value, acceleration.value);
 
-    if (positionY.value > height) {
-      jump();
+    if (positionY.value > height - groundHeight - BIRD_SIZE) {
+      onLost();
     }
   });
 
@@ -211,10 +236,6 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     ];
   });
 
-  const scoreText = useDerivedValue(() => {
-    return `Lives: ${lives.value}`;
-  }, [lives]);
-
   useEffect(() => {
     setTimeout(() => {
       state.value = 'running';
@@ -230,17 +251,45 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     <View style={styles.container}>
       <GestureDetector gesture={tap}>
         <Canvas style={{width, height, backgroundColor}}>
+          <Ground height={groundHeight} />
           <Obstacle obstacle={firstObstacle} positionX={backgroundPositionX} />
           <Obstacle obstacle={secondObstacle} positionX={backgroundPositionX} />
+          {/* <Rect width={BIRD_SIZE} height={BIRD_SIZE} transform={transform} /> */}
           <Image
             image={image}
             width={BIRD_SIZE}
             height={BIRD_SIZE}
             transform={transform}
           />
-          <Text font={font} x={10} y={100} text={scoreText} color={'white'} />
         </Canvas>
       </GestureDetector>
+      <View
+        style={{
+          position: 'absolute',
+          top: 100,
+          alignSelf: 'center',
+          flexDirection: 'row',
+          alignContent: 'center',
+        }}>
+        <Text
+          style={{
+            color: 'white',
+            fontSize: 30,
+            fontWeight: '800',
+          }}>
+          {'Score: '}
+        </Text>
+        <Animated.View entering={enteringAnimation} key={score}>
+          <Text
+            style={{
+              color: 'white',
+              fontSize: 30,
+              fontWeight: '800',
+            }}>
+            {score}
+          </Text>
+        </Animated.View>
+      </View>
     </View>
   );
 };
