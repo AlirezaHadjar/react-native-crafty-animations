@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Canvas,
   Extrapolate,
@@ -72,6 +73,7 @@ const generateRandomObstacle = (
     top: top,
     bottom: bottom,
     hit: false,
+    calculated: false,
   };
 };
 
@@ -85,7 +87,7 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
   const firstObstacle = useSharedValue<ObstacleType | null>(null);
   const secondObstacle = useSharedValue<ObstacleType | null>(null);
   const font = useFont(require('../../../Roboto-Bold.ttf'), 24);
-  const lives = useSharedValue(10);
+  const score = useSharedValue(0);
   const state = useSharedValue<'running' | 'stop'>('stop');
 
   const jump = () => {
@@ -100,18 +102,59 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     jump();
   });
 
+  const getNewObstacle = (prev?: ObstacleType | null) => {
+    'worklet';
+
+    if (!prev) {
+      return generateRandomObstacle(obstacleWidth, height, width);
+    }
+
+    const x =
+      prev.top.startX +
+      prev.top.width +
+      getRandomValue(minObstacleDiffX, maxObstacleDiffX);
+
+    return generateRandomObstacle(obstacleWidth, height, x);
+  };
+
   const initializeObstacles = () => {
     'worklet';
 
-    const first = generateRandomObstacle(obstacleWidth, height, width);
-    const x =
-      first.top.startX +
-      obstacleWidth +
-      getRandomValue(minObstacleDiffX, maxObstacleDiffX);
-    const second = generateRandomObstacle(obstacleWidth, height, x);
+    const first = getNewObstacle();
+    const second = getNewObstacle(first);
 
     firstObstacle.value = first;
     secondObstacle.value = second;
+  };
+
+  const updateScore = (obstacle: ObstacleType) => {
+    'worklet';
+    let newObstacle = {...obstacle};
+    const x = newObstacle.top.startX + backgroundPositionX.value;
+    const isInBetweenHorizontally =
+      positionX.value + BIRD_SIZE > x &&
+      positionX.value < x + newObstacle.top.width;
+    const isInBetweenVertically =
+      positionY.value > newObstacle.top.height &&
+      positionY.value + BIRD_SIZE < newObstacle.bottom.startY;
+
+    if (isInBetweenHorizontally && !isInBetweenVertically && !newObstacle.hit) {
+      newObstacle = {...newObstacle, hit: true};
+    }
+    const passedObstacle = positionX.value > x + newObstacle.top.width;
+
+    if (passedObstacle) {
+      if (newObstacle.calculated === false) {
+        if (newObstacle.hit === false) {
+          score.value += 1;
+        } else {
+          score.value = 0;
+        }
+        newObstacle = {...newObstacle, calculated: true};
+      }
+    }
+
+    return newObstacle;
   };
 
   useFrameCallback(() => {
@@ -123,64 +166,30 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
     if (!first && !second) {
       initializeObstacles();
     }
-    // const startWindowX = backgroundPositionX.value;
-    // const endWindowX = backgroundPositionX.value - width;
 
     if (first) {
       const x = first.top.startX + backgroundPositionX.value;
       const isLeftWindow = x + first.top.width < 0;
+      let newFirst = first;
 
-      if (isLeftWindow && second) {
-        const newX =
-          second.top.startX +
-          obstacleWidth +
-          getRandomValue(minObstacleDiffX, maxObstacleDiffX);
-
-        firstObstacle.value = generateRandomObstacle(
-          obstacleWidth,
-          height,
-          newX,
-        );
+      newFirst = updateScore(newFirst);
+      if (isLeftWindow) {
+        newFirst = getNewObstacle(second);
       }
-      const isInBetweenHorizontally =
-        positionX.value + BIRD_SIZE > x &&
-        positionX.value < x + first.top.width;
-      const isInBetweenVertically =
-        positionY.value > first.top.height &&
-        positionY.value + BIRD_SIZE < first.bottom.startY;
 
-      if (isInBetweenHorizontally && !isInBetweenVertically && !first.hit) {
-        firstObstacle.value = {...first, hit: true};
-        lives.value -= 1;
-      }
+      firstObstacle.value = newFirst;
     }
     if (second) {
       const x = second.top.startX + backgroundPositionX.value;
       const isLeftWindow = x + second.top.width < 0;
+      let newSecond = second;
 
-      if (isLeftWindow && first) {
-        const newX =
-          first.top.startX +
-          obstacleWidth +
-          getRandomValue(minObstacleDiffX, maxObstacleDiffX);
-
-        secondObstacle.value = generateRandomObstacle(
-          obstacleWidth,
-          height,
-          newX,
-        );
+      newSecond = updateScore(newSecond);
+      if (isLeftWindow) {
+        newSecond = getNewObstacle(first);
       }
-      const isInBetweenHorizontally =
-        positionX.value + BIRD_SIZE > x &&
-        positionX.value < x + second.top.width;
-      const isInBetweenVertically =
-        positionY.value > second.top.height &&
-        positionY.value + BIRD_SIZE < second.bottom.startY;
 
-      if (isInBetweenHorizontally && !isInBetweenVertically && !second.hit) {
-        secondObstacle.value = {...second, hit: true};
-        lives.value -= 1;
-      }
+      secondObstacle.value = newSecond;
     }
     backgroundPositionX.value -= 4;
     positionX.value += velocity.value.x;
@@ -212,8 +221,8 @@ export const FlappyBird: React.FC<FlappyBirdProps> = ({}) => {
   });
 
   const scoreText = useDerivedValue(() => {
-    return `Lives: ${lives.value}`;
-  }, [lives]);
+    return `Score: ${score.value}`;
+  }, [score]);
 
   useEffect(() => {
     setTimeout(() => {

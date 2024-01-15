@@ -6,11 +6,16 @@ import {SharedValue, useDerivedValue} from 'react-native-reanimated';
 type ObstacleProps = {
   obstacle: SharedValue<ObstacleType | null>;
   positionX: SharedValue<number>;
+  color?: string; //TODO: remove this
 };
 
 const obstacleColor = 'rgb(205, 242, 84)';
 
-export const Obstacle: React.FC<ObstacleProps> = ({obstacle, positionX}) => {
+export const Obstacle: React.FC<ObstacleProps> = ({
+  obstacle,
+  positionX,
+  color,
+}) => {
   const x = useDerivedValue(() => {
     return positionX.value + (obstacle.value?.top.startX || 0);
   });
@@ -36,14 +41,14 @@ export const Obstacle: React.FC<ObstacleProps> = ({obstacle, positionX}) => {
   return (
     <>
       <Rect
-        color={obstacleColor}
+        color={color || obstacleColor}
         x={x}
         y={topY}
         width={topWidth}
         height={topHeight}
       />
       <Rect
-        color={obstacleColor}
+        color={color || obstacleColor}
         x={x}
         y={bottomY}
         width={bottomWidth}
