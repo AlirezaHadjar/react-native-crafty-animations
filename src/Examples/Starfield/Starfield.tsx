@@ -1,17 +1,38 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState} from 'react';
-import {Canvas} from '@shopify/react-native-skia';
 import {
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
-import {Star} from './Star';
+  Atlas,
+  Canvas,
+  Circle,
+  Rect,
+  interpolate,
+  rect,
+  useRSXformBuffer,
+  useTextureValue,
+} from '@shopify/react-native-skia';
+import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
+import {
+  useDerivedValue,
+  useSharedValue,
+  useFrameCallback,
+} from 'react-native-reanimated';
+import {generateRandomStarColor} from './utils';
 import Slider from '@react-native-community/slider';
 
-const STARS_ARRAY = new Array(100).fill(0);
+const length = 800;
+// const STARS_ARRAY = new Array(length).fill(0);
+const size = 8;
+// const stroke = 3;
+
+const getRandomPos = (min: number, max: number) => {
+  'worklet';
+  return Math.random() * (max - min) + min;
+};
+
+const textureSize = {
+  width: size,
+  height: size,
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -46,27 +67,135 @@ const styles = StyleSheet.create({
   slider: {width: '90%', height: 40},
 });
 
+const colors = new Array(length).fill(0).map(() => generateRandomStarColor());
+
 export const Starfield = () => {
   const {width, height} = useWindowDimensions();
-  const [speed, setSpeed] = useState(0);
-  const [ellipse, setEllipse] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  // const [ellipse, setEllipse] = useState(false);
+  const color = generateRandomStarColor();
+  //   const x = useSharedValue(getRandomPos(-width / 2, width / 2));
+  //   const y = useSharedValue(getRandomPos(-height / 2, height / 2));
+  const animatedSpeed = useDerivedValue(() => speed, [speed]);
+  const maxDist = width;
+  // const z = useSharedValue(getRandomPos(0, maxDist));
+  //   const pz = useSharedValue(z.value);
+  // const shapeSize = useDerivedValue(
+  //   () => interpolate(z.value, [0, maxDist], [size, 0]),
+  //   [maxDist, z.value, size],
+  // );
+  const xs = useSharedValue(
+    new Array(length).fill(0).map(() => getRandomPos(-width / 2, width / 2)),
+  );
+  const ys = useSharedValue(
+    new Array(length).fill(0).map(() => getRandomPos(-height / 2, height / 2)),
+  );
+  const zs = useSharedValue(
+    new Array(length).fill(0).map(() => getRandomPos(0, maxDist)),
+  );
+
+  const texture = useTextureValue(
+    <Rect
+      // transform={[{translateX: width / 2}, {translateY: height / 2}]}
+      // r={20}
+      height={size}
+      width={size}
+      color={color}
+    />,
+    textureSize,
+  );
+
+  const sprites = new Array(length).fill(0).map(() =>
+    // rrect(
+    //   {height: textureSize.height, width: textureSize.width, x: 0, y: 0},
+    //   textureSize.width / 2,
+    //   textureSize.height / 2,
+    // ),
+    rect(
+      // -textureSize.height / 2,
+      // -textureSize.height / 2,
+      0,
+      0,
+      textureSize.width,
+      textureSize.height,
+    ),
+  );
+
+  const transforms = useRSXformBuffer(length, (val, i) => {
+    'worklet';
+    const tx = xs.value[i];
+    const ty = ys.value[i];
+    const newSize = interpolate(zs.value[i], [0, maxDist], [size, 0]);
+    const scale = newSize / size;
+
+    const factor = maxDist / zs.value[i];
+    const cx = tx * factor + width / 2;
+    const cy = ty * factor + height / 2;
+
+    val.set(scale, 0, cx, cy);
+  });
+
+  useFrameCallback(() => {
+    // Increment a value on every frame update
+    // pz.value = z.value;
+    // const newZ = z.value - animatedSpeed.value;
+    // z.value = newZ;
+    const newZs = zs.value.map(z => z - animatedSpeed.value);
+    zs.value = newZs;
+
+    const factors = zs.value.map(z => maxDist / z);
+    const cxs = xs.value.map((x, i) => x * factors[i]);
+    const cys = ys.value.map((y, i) => y * factors[i]);
+
+    const finalZ = newZs;
+    const finalXs = xs.value;
+    const finalYs = ys.value;
+
+    new Array(length).fill(0).forEach((_, i) => {
+      const newSize = interpolate(zs.value[i], [0, maxDist], [size, 0]);
+
+      const xArea = width / 2 - newSize / 2;
+      const yArea = height / 2 - newSize / 2;
+
+      const isInWindow =
+        cxs[i] >= -xArea &&
+        cxs[i] <= xArea &&
+        cys[i] >= -yArea &&
+        cys[i] <= yArea;
+
+      if (newZs[i] < 1 || !isInWindow) {
+        finalZ[i] = maxDist;
+        finalXs[i] = getRandomPos(-width / 2, width / 2);
+        finalYs[i] = getRandomPos(-height / 2, height / 2);
+        // pz.value = maxDist;
+      }
+    });
+    zs.value = finalZ;
+    xs.value = finalXs;
+    ys.value = finalYs;
+  });
 
   return (
     <View style={styles.container}>
-      <Canvas style={{width, height, backgroundColor: 'black'}}>
-        {STARS_ARRAY.map((_, i) => (
-          <Star key={i} speed={speed} ellipse={ellipse} />
-        ))}
+      <Canvas
+        style={{width, height, backgroundColor: 'black'}}
+        mode="continuous">
+        <Atlas
+          image={texture}
+          sprites={sprites}
+          transforms={transforms}
+          colors={colors}
+        />
       </Canvas>
       <View style={styles.controlContainer}>
         <View style={styles.switch}>
           <Text style={{color: 'white'}}>Ellipse Mode</Text>
-          <Switch value={ellipse} onValueChange={setEllipse} />
+          {/* <Switch value={ellipse} onValueChange={setEllipse} /> */}
         </View>
         <Slider
           style={styles.slider}
           onValueChange={setSpeed}
-          step={2}
+          step={1}
           minimumValue={0}
           maximumValue={20}
           tapToSeek
