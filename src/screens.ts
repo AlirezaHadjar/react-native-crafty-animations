@@ -2,7 +2,7 @@ import {Firework} from './Examples/Firework';
 import {FlappyBird} from './Examples/FlappyBird';
 import {FractalTree} from './Examples/FractalTree';
 import {Phyllotaxis} from './Examples/Phyllotaxis';
-import {Starfield} from './Examples/Starfield';
+import {Starfield, StarfieldAtlas} from './Examples/Starfield';
 import {StackParamList} from './types';
 
 type Screen = {
@@ -31,6 +31,11 @@ export const ExampleScreens: Screen[] = [
     name: 'Starfield',
     title: '✨ Starfield',
     component: Starfield,
+  },
+  {
+    name: 'StarfieldAtlas',
+    title: '✨ Starfield - 🏎️ Atlas',
+    component: StarfieldAtlas,
   },
   {
     name: 'FlappyBird',
