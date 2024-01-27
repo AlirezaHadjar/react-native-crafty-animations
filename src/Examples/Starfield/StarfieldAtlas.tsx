@@ -73,16 +73,9 @@ export const StarfieldAtlas = () => {
   const [speed, setSpeed] = useState(1);
   // const [ellipse, setEllipse] = useState(false);
   const color = generateRandomStarColor();
-  //   const x = useSharedValue(getRandomPos(-width / 2, width / 2));
-  //   const y = useSharedValue(getRandomPos(-height / 2, height / 2));
   const animatedSpeed = useDerivedValue(() => speed, [speed]);
   const maxDist = width;
-  // const z = useSharedValue(getRandomPos(0, maxDist));
   //   const pz = useSharedValue(z.value);
-  // const shapeSize = useDerivedValue(
-  //   () => interpolate(z.value, [0, maxDist], [size, 0]),
-  //   [maxDist, z.value, size],
-  // );
   const xs = useSharedValue(
     new Array(length).fill(0).map(() => getRandomPos(-width / 2, width / 2)),
   );
@@ -95,7 +88,6 @@ export const StarfieldAtlas = () => {
 
   const texture = useTextureValue(
     <Rect
-      // transform={[{translateX: width / 2}, {translateY: height / 2}]}
       // r={20}
       height={size}
       width={size}
@@ -110,14 +102,7 @@ export const StarfieldAtlas = () => {
     //   textureSize.width / 2,
     //   textureSize.height / 2,
     // ),
-    rect(
-      // -textureSize.height / 2,
-      // -textureSize.height / 2,
-      0,
-      0,
-      textureSize.width,
-      textureSize.height,
-    ),
+    rect(0, 0, textureSize.width, textureSize.height),
   );
 
   const transforms = useRSXformBuffer(length, (val, i) => {
@@ -137,8 +122,6 @@ export const StarfieldAtlas = () => {
   useFrameCallback(() => {
     // Increment a value on every frame update
     // pz.value = z.value;
-    // const newZ = z.value - animatedSpeed.value;
-    // z.value = newZ;
     const newZs = zs.value.map(z => z - animatedSpeed.value);
     zs.value = newZs;
 
