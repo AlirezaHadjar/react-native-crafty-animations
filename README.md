@@ -25,3 +25,9 @@ https://github.com/AlirezaHadjar/react-native-creative-animations/assets/5719240
 [Source Code](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/FlappyBird/FlappyBird.tsx)
 
 https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/03241275-0c21-42b9-80ef-9c037576397a
+
+## 🔗 Double Pendulum
+[Source Code](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/DoublePendulum/DoublePendulum.tsx)
+
+https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/9add3e8b-de35-47fb-8cd7-57013ba3af76
+
