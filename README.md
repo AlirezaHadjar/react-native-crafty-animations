@@ -6,6 +6,8 @@ It is implemented in two ways. There's a new Atlas API which is much more perfor
 - [Original Method](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/Starfield/Starfield.tsx)
 - [Atlas API](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/Starfield/StarfieldAtlas.tsx)
 
+https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/ac989edf-6699-439a-bdf3-f1c42ebd827d
+
 ## 🌴 Fractal Tree
 [Source Code](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/FractalTree/FractalTree.tsx)
 
