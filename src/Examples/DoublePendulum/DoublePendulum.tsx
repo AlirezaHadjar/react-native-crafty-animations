@@ -2,16 +2,19 @@
 import {
   Canvas,
   Circle,
+  Group,
   Line,
   Path,
+  SweepGradient,
   usePathValue,
+  vec,
 } from '@shopify/react-native-skia';
 import React from 'react';
 import {StyleSheet, View, useWindowDimensions} from 'react-native';
 import {
   SensorType,
+  interpolate,
   useAnimatedSensor,
-  useAnimatedStyle,
   useDerivedValue,
   useFrameCallback,
   useSharedValue,
@@ -27,13 +30,28 @@ const r1 = 100;
 const r2 = 100;
 const m1 = 10;
 const m2 = 10;
-const g = 0.5;
+
+const gForce = 1;
 
 export const DoublePendulum: React.FC<DoublePendulumProps> = ({}) => {
   const {width, height} = useWindowDimensions();
   const {sensor} = useAnimatedSensor(SensorType.GRAVITY, {interval: 16});
   const cx = width / 2;
   const cy = height / 2;
+  const gSensor = useDerivedValue(() => {
+    const isNotAvailable =
+      sensor.value.x === 0 && sensor.value.y === 0 && sensor.value.z === 0;
+
+    // if sensor is not available, we can use a default value (e.g. simulator)
+    if (isNotAvailable) {
+      return 9.8;
+    }
+    return sensor.value.y * -1;
+  }, [sensor]);
+  const gAnimated = useDerivedValue(
+    () => interpolate(gSensor.value, [-10, 10], [-gForce, gForce]),
+    [gSensor],
+  );
 
   const a1Animated = useSharedValue(Math.PI / 2);
   const a2Animated = useSharedValue(Math.PI / 2);
@@ -54,7 +72,13 @@ export const DoublePendulum: React.FC<DoublePendulumProps> = ({}) => {
   );
   const points = useSharedValue<{x: number; y: number}[]>([]);
 
-  useFrameCallback(() => {
+  const frameRate = 30;
+  const fps = 1000 / frameRate;
+  const time = useSharedValue(0);
+
+  useFrameCallback(frameInfo => {
+    const g = gAnimated.value;
+
     let a1 = a1Animated.value;
     let a2 = a2Animated.value;
     let a1_v = a1_vAnimated.value;
@@ -65,35 +89,38 @@ export const DoublePendulum: React.FC<DoublePendulumProps> = ({}) => {
     let num3 = -2 * Math.sin(a1 - a2) * m2;
     let num4 = a2_v * a2_v * r2 + a1_v * a1_v * r1 * Math.cos(a1 - a2);
     let den = r1 * (2 * m1 + m2 - m2 * Math.cos(2 * a1 - 2 * a2));
-    let a1_a = (num1 + num2 + num3 * num4) / den;
+    const a1_a = (num1 + num2 + num3 * num4) / den;
 
     num1 = 2 * Math.sin(a1 - a2);
     num2 = a1_v * a1_v * r1 * (m1 + m2);
     num3 = g * (m1 + m2) * Math.cos(a1);
     num4 = a2_v * a2_v * r2 * m2 * Math.cos(a1 - a2);
     den = r2 * (2 * m1 + m2 - m2 * Math.cos(2 * a1 - 2 * a2));
-    let a2_a = (num1 * (num2 + num3 + num4)) / den;
+    const a2_a = (num1 * (num2 + num3 + num4)) / den;
 
-    let x1 = r1 * Math.sin(a1);
-    let y1 = r1 * Math.cos(a1);
+    const x1 = r1 * Math.sin(a1);
+    const y1 = r1 * Math.cos(a1);
 
-    let x2 = x1 + r2 * Math.sin(a2);
-    let y2 = y1 + r2 * Math.cos(a2);
+    const x2 = x1 + r2 * Math.sin(a2);
+    const y2 = y1 + r2 * Math.cos(a2);
 
     a1_v += a1_a;
     a2_v += a2_a;
     a1 += a1_v;
     a2 += a2_v;
 
-    a1_v *= 0.99;
-    a2_v *= 0.99;
+    a1_v *= 0.998;
+    a2_v *= 0.998;
 
-    if (Math.abs(a2_v) > 0.05 || true) {
+    const now = frameInfo.timestamp - time.value;
+    if (now > fps) {
+      time.value = frameInfo.timestamp;
+
       const nextPoints = {x: x2 + cx, y: y2 + cy};
       points.value = [...points.value, nextPoints];
 
-      points.value = points.value.filter((_, i) => i < 500);
-      // points.value = points.value.slice(-500);
+      //   points.value = points.value.filter((_, i) => i < 500);
+      points.value = points.value.slice(-100);
     }
 
     a1Animated.value = a1;
@@ -124,12 +151,20 @@ export const DoublePendulum: React.FC<DoublePendulumProps> = ({}) => {
   return (
     <View style={styles.container}>
       <Canvas style={{width, height, backgroundColor: 'white'}}>
-        <Circle cx={x1Animated} cy={y1Animated} r={m1 * 2} color={'black'} />
-        <Line p1={p1} p2={p2} color={'black'} strokeWidth={2} />
-        <Line p1={p0} p2={p1} color={'black'} strokeWidth={2} />
-        <Circle cx={x2Animated} cy={y2Animated} r={m2 * 2} color={'black'} />
+        <Group>
+          <Path path={trace} style={'stroke'} strokeWidth={0.6}>
+            <SweepGradient
+              c={vec(cx, cy)}
+              colors={['cyan', 'magenta', 'blue', 'cyan']}
+            />
+          </Path>
 
-        <Path path={trace} color={'black'} style={'stroke'} strokeWidth={0.6} />
+          <Line p1={p1} p2={p2} strokeWidth={2} />
+          <Line p1={p0} p2={p1} strokeWidth={2} />
+
+          <Circle cx={x1Animated} cy={y1Animated} r={m1} />
+          <Circle cx={x2Animated} cy={y2Animated} r={m2} />
+        </Group>
       </Canvas>
     </View>
   );
