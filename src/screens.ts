@@ -1,3 +1,4 @@
+import {DoublePendulum} from './Examples/DoublePendulum';
 import {Firework} from './Examples/Firework';
 import {FlappyBird} from './Examples/FlappyBird';
 import {FractalTree} from './Examples/FractalTree';
@@ -41,5 +42,10 @@ export const ExampleScreens: Screen[] = [
     name: 'FlappyBird',
     title: '🐦 Flappy Bird',
     component: FlappyBird,
+  },
+  {
+    name: 'DoublePendulum',
+    title: '🔗 Double Pendulum',
+    component: DoublePendulum,
   },
 ];
