@@ -42,7 +42,7 @@ export const Home: React.FC<HomeProps> = ({}) => {
                 justifyContent: 'center',
                 paddingHorizontal: 16,
               }}>
-              <Text style={{fontWeight: '500', fontSize: 18}}>
+              <Text style={{fontWeight: '500', fontSize: 18, color: 'black'}}>
                 {screen.title}
               </Text>
             </TouchableOpacity>
