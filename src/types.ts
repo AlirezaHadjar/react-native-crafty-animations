@@ -6,4 +6,5 @@ export type StackParamList = {
   Starfield: undefined;
   StarfieldAtlas: undefined;
   FlappyBird: undefined;
+  DoublePendulum: undefined;
 };
