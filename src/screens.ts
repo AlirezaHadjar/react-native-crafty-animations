@@ -1,4 +1,5 @@
 import {DoublePendulum} from './Examples/DoublePendulum';
+import {FallingSand} from './Examples/FallingSand';
 import {Firework} from './Examples/Firework';
 import {FlappyBird} from './Examples/FlappyBird';
 import {FractalTree} from './Examples/FractalTree';
@@ -10,6 +11,7 @@ type Screen = {
   name: keyof StackParamList;
   title: string;
   component: any;
+  headerShown?: boolean;
 };
 
 export const ExampleScreens: Screen[] = [
@@ -47,5 +49,11 @@ export const ExampleScreens: Screen[] = [
     name: 'DoublePendulum',
     title: '🔗 Double Pendulum',
     component: DoublePendulum,
+  },
+  {
+    name: 'FallingSand',
+    title: '🏖️ Falling Sand',
+    component: FallingSand,
+    headerShown: true,
   },
 ];
