@@ -3,11 +3,11 @@ import React, {useState} from 'react';
 import {
   Atlas,
   Canvas,
-  Rect,
+  RoundedRect,
   interpolate,
   rect,
   useRSXformBuffer,
-  useTextureValue,
+  useTexture,
 } from '@shopify/react-native-skia';
 import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import {
@@ -20,7 +20,7 @@ import Slider from '@react-native-community/slider';
 
 const length = 800;
 // const STARS_ARRAY = new Array(length).fill(0);
-const size = 8;
+const size = 15;
 // const stroke = 3;
 
 const getRandomPos = (min: number, max: number) => {
@@ -66,13 +66,15 @@ const styles = StyleSheet.create({
   slider: {width: '90%', height: 40},
 });
 
-const colors = new Array(length).fill(0).map(() => generateRandomStarColor());
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _colors = new Array(length)
+  .fill(0)
+  .map(() => generateRandomStarColor()) as unknown as Float32Array[];
 
 export const StarfieldAtlas = () => {
   const {width, height} = useWindowDimensions();
   const [speed, setSpeed] = useState(1);
   // const [ellipse, setEllipse] = useState(false);
-  const color = generateRandomStarColor();
   const animatedSpeed = useDerivedValue(() => speed, [speed]);
   const maxDist = width;
   //   const pz = useSharedValue(z.value);
@@ -86,12 +88,12 @@ export const StarfieldAtlas = () => {
     new Array(length).fill(0).map(() => getRandomPos(0, maxDist)),
   );
 
-  const texture = useTextureValue(
-    <Rect
-      // r={20}
+  const texture = useTexture(
+    <RoundedRect
+      r={size / 2}
       height={size}
       width={size}
-      color={color}
+      color={generateRandomStarColor()}
     />,
     textureSize,
   );
@@ -162,12 +164,7 @@ export const StarfieldAtlas = () => {
       <Canvas
         style={{width, height, backgroundColor: 'black'}}
         mode="continuous">
-        <Atlas
-          image={texture}
-          sprites={sprites}
-          transforms={transforms}
-          colors={colors}
-        />
+        <Atlas image={texture} sprites={sprites} transforms={transforms} />
       </Canvas>
       <View style={styles.controlContainer}>
         <View style={styles.switch}>
