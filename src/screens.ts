@@ -1,3 +1,4 @@
+import {BouncableGrid} from './Examples/BouncableGrid';
 import {DoublePendulum} from './Examples/DoublePendulum';
 import {Firework} from './Examples/Firework';
 import {FlappyBird} from './Examples/FlappyBird';
@@ -47,5 +48,10 @@ export const ExampleScreens: Screen[] = [
     name: 'DoublePendulum',
     title: '🔗 Double Pendulum',
     component: DoublePendulum,
+  },
+  {
+    name: 'BouncableGrid',
+    title: '🔲 Bouncable Grid',
+    component: BouncableGrid,
   },
 ];
