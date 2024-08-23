@@ -4,7 +4,7 @@ import {
   Rect,
   rect,
   useRSXformBuffer,
-  useTextureValue,
+  useTexture,
 } from '@shopify/react-native-skia';
 import React from 'react';
 import {Dimensions} from 'react-native';
@@ -75,7 +75,7 @@ export const FallingSand: React.FC<FallingSandProps> = ({}) => {
     return j >= 0 && j <= rows - 1;
   };
 
-  const texture = useTextureValue(
+  const texture = useTexture(
     <Rect height={w} width={w} color={'#fefefe'} />,
     textureSize,
   );
@@ -212,7 +212,7 @@ export const FallingSand: React.FC<FallingSandProps> = ({}) => {
   return (
     <GestureDetector gesture={gesture}>
       <Canvas style={{width, height, backgroundColor: 'black'}}>
-        <Atlas image={texture} sprites={sprites} transforms={transforms} />
+        {/* <Atlas image={texture} sprites={sprites} transforms={transforms} /> */}
       </Canvas>
     </GestureDetector>
   );
