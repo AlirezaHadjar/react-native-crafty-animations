@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["rrect", "Xform"]
+  "cSpell.words": ["rrect", "Xform"],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

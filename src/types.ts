@@ -8,4 +8,5 @@ export type StackParamList = {
   FlappyBird: undefined;
   DoublePendulum: undefined;
   BouncableGrid: undefined;
+  BouncableGridAtlas: undefined;
 };
