@@ -8,4 +8,5 @@ export type StackParamList = {
   FlappyBird: undefined;
   DoublePendulum: undefined;
   Lighter: undefined;
+  RotatingCharacters: undefined;
 };

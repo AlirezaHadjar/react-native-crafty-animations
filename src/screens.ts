@@ -4,6 +4,7 @@ import {FlappyBird} from './Examples/FlappyBird';
 import {FractalTree} from './Examples/FractalTree';
 import {Lighter} from './Examples/Lighter';
 import {Phyllotaxis} from './Examples/Phyllotaxis';
+import {RotatingCharacters} from './Examples/RotatingCharacters';
 import {Starfield, StarfieldAtlas} from './Examples/Starfield';
 import {StackParamList} from './types';
 
@@ -53,5 +54,10 @@ export const ExampleScreens: Screen[] = [
     name: 'Lighter',
     title: '🔥 Lighter',
     component: Lighter,
+  },
+  {
+    name: 'RotatingCharacters',
+    title: '🅰️ Rotating Characters',
+    component: RotatingCharacters,
   },
 ];
