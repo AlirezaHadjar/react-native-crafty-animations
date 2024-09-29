@@ -1,4 +1,4 @@
-# React Native Creative Animations
+# React Native Crafty Animations
 ![_6d997a69-23b2-45ae-a60d-8054b9986ef1-2-modified](https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/49d71140-938b-4eb3-b5fe-7eeb8243f884)
 
 ## ✨ Starfield Simulation
