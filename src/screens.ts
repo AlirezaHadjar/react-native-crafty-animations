@@ -2,6 +2,7 @@ import {DoublePendulum} from './Examples/DoublePendulum';
 import {Firework} from './Examples/Firework';
 import {FlappyBird} from './Examples/FlappyBird';
 import {FractalTree} from './Examples/FractalTree';
+import {Lighter} from './Examples/Lighter';
 import {Phyllotaxis} from './Examples/Phyllotaxis';
 import {Starfield, StarfieldAtlas} from './Examples/Starfield';
 import {StackParamList} from './types';
@@ -47,5 +48,10 @@ export const ExampleScreens: Screen[] = [
     name: 'DoublePendulum',
     title: '🔗 Double Pendulum',
     component: DoublePendulum,
+  },
+  {
+    name: 'Lighter',
+    title: '🔥 Lighter',
+    component: Lighter,
   },
 ];

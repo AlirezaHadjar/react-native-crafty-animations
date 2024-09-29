@@ -7,7 +7,7 @@ import {
   interpolate,
   rect,
   useRSXformBuffer,
-  useTextureValue,
+  useTexture,
 } from '@shopify/react-native-skia';
 import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import {
@@ -86,7 +86,7 @@ export const StarfieldAtlas = () => {
     new Array(length).fill(0).map(() => getRandomPos(0, maxDist)),
   );
 
-  const texture = useTextureValue(
+  const texture = useTexture(
     <Rect
       // r={20}
       height={size}

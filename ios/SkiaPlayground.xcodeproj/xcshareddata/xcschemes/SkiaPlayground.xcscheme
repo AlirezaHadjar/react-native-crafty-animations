@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1210"
+   LastUpgradeVersion = "1130"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "SkiaPlayground.app"
-               BlueprintName = "SkiaPlayground"
-               ReferencedContainer = "container:SkiaPlayground.xcodeproj">
+               BuildableName = "skiaplayground.app"
+               BlueprintName = "skiaplayground"
+               ReferencedContainer = "container:skiaplayground.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "SkiaPlaygroundTests.xctest"
-               BlueprintName = "SkiaPlaygroundTests"
-               ReferencedContainer = "container:SkiaPlayground.xcodeproj">
+               BuildableName = "skiaplaygroundTests.xctest"
+               BlueprintName = "skiaplaygroundTests"
+               ReferencedContainer = "container:skiaplayground.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "SkiaPlayground.app"
-            BlueprintName = "SkiaPlayground"
-            ReferencedContainer = "container:SkiaPlayground.xcodeproj">
+            BuildableName = "skiaplayground.app"
+            BlueprintName = "skiaplayground"
+            ReferencedContainer = "container:skiaplayground.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "SkiaPlayground.app"
-            BlueprintName = "SkiaPlayground"
-            ReferencedContainer = "container:SkiaPlayground.xcodeproj">
+            BuildableName = "skiaplayground.app"
+            BlueprintName = "skiaplayground"
+            ReferencedContainer = "container:skiaplayground.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
