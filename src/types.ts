@@ -9,4 +9,5 @@ export type StackParamList = {
   DoublePendulum: undefined;
   Lighter: undefined;
   RotatingCharacters: undefined;
+  Confetti: undefined;
 };

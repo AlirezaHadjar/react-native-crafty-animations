@@ -1,3 +1,4 @@
+import {Confetti} from './Examples/Confetti';
 import {DoublePendulum} from './Examples/DoublePendulum';
 import {Firework} from './Examples/Firework';
 import {FlappyBird} from './Examples/FlappyBird';
@@ -59,5 +60,10 @@ export const ExampleScreens: Screen[] = [
     name: 'RotatingCharacters',
     title: '🅰️ Rotating Characters',
     component: RotatingCharacters,
+  },
+  {
+    name: 'Confetti',
+    title: '🎉 Confetti',
+    component: Confetti,
   },
 ];
