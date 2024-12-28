@@ -1,7 +1,7 @@
-# React Native Creative Animations
+# React Native Crafty Animations
 ![_6d997a69-23b2-45ae-a60d-8054b9986ef1-2-modified](https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/49d71140-938b-4eb3-b5fe-7eeb8243f884)
 
-## ✨ Starfield Simulation 
+## ✨ Starfield Simulation
 It is implemented in two ways. There's a new Atlas API which is much more performant but less flexible for now
 - [Original Method](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/Starfield/Starfield.tsx)
 - [Atlas API](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/Starfield/StarfieldAtlas.tsx)
@@ -32,4 +32,15 @@ https://github.com/AlirezaHadjar/react-native-creative-animations/assets/5719240
 [Source Code](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/DoublePendulum/DoublePendulum.tsx)
 
 https://github.com/AlirezaHadjar/react-native-creative-animations/assets/57192409/9add3e8b-de35-47fb-8cd7-57013ba3af76
+
+## 🅰️ Rotating Characters
+[Source Code](https://github.com/AlirezaHadjar/react-native-creative-animations/blob/main/src/Examples/RotatingCharacters/RotatingCharacters.tsx)
+
+https://github.com/user-attachments/assets/b2e348a5-df90-49c7-91bf-4ec69daf52fb
+
+## 🎉 Confetti
+[Source Code](https://github.com/AlirezaHadjar/react-native-crafty-animations/blob/main/src/Examples/Confetti/Confetti.tsx)
+
+https://github.com/user-attachments/assets/cff6aec3-e914-4936-9182-beb25e75142b
+
 

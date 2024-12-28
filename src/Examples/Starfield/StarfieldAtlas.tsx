@@ -4,9 +4,11 @@ import {
   Atlas,
   Canvas,
   Rect,
+  RoundedRect,
   interpolate,
   rect,
   useRSXformBuffer,
+  useTexture,
   useTexture,
 } from '@shopify/react-native-skia';
 import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
@@ -19,7 +21,6 @@ import {generateRandomStarColor} from './utils';
 import Slider from '@react-native-community/slider';
 
 const length = 800;
-// const STARS_ARRAY = new Array(length).fill(0);
 const size = 8;
 // const stroke = 3;
 
@@ -87,23 +88,13 @@ export const StarfieldAtlas = () => {
   );
 
   const texture = useTexture(
-    <Rect
-      // r={20}
-      height={size}
-      width={size}
-      color={color}
-    />,
+    <RoundedRect r={20} height={size} width={size} color={color} />,
     textureSize,
   );
 
-  const sprites = new Array(length).fill(0).map(() =>
-    // rrect(
-    //   {height: textureSize.height, width: textureSize.width, x: 0, y: 0},
-    //   textureSize.width / 2,
-    //   textureSize.height / 2,
-    // ),
-    rect(0, 0, textureSize.width, textureSize.height),
-  );
+  const sprites = new Array(length)
+    .fill(0)
+    .map(() => rect(0, 0, textureSize.width, textureSize.height));
 
   const transforms = useRSXformBuffer(length, (val, i) => {
     'worklet';
@@ -162,12 +153,7 @@ export const StarfieldAtlas = () => {
       <Canvas
         style={{width, height, backgroundColor: 'black'}}
         mode="continuous">
-        <Atlas
-          image={texture}
-          sprites={sprites}
-          transforms={transforms}
-          colors={colors}
-        />
+        <Atlas image={texture} sprites={sprites} transforms={transforms} />
       </Canvas>
       <View style={styles.controlContainer}>
         <View style={styles.switch}>
