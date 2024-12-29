@@ -9,7 +9,6 @@ import {
   rect,
   useRSXformBuffer,
   useTexture,
-  useTexture,
 } from '@shopify/react-native-skia';
 import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import {
