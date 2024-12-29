@@ -1,10 +1,17 @@
 import {
   Atlas,
   Canvas,
+  Paint,
   Rect,
   rect,
   useRSXformBuffer,
   useTexture,
+  LinearGradient,
+  vec,
+  Shadow,
+  Group,
+  Mask,
+  Path,
 } from '@shopify/react-native-skia';
 import React from 'react';
 import {Dimensions} from 'react-native';
@@ -14,54 +21,84 @@ import {
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
+import {
+  AnimatedIntervalID,
+  clearAnimatedInterval,
+  setAnimatedInterval,
+} from '../../hooks/useAnimatedInterval';
+import {
+  AnimatedTimeoutID,
+  clearAnimatedTimeout,
+  setAnimatedTimeout,
+} from '../../hooks/useAnimatedTimeout';
 
 type FallingSandProps = {};
 
-const make2DArray = (cols: number, rows: number) => {
+type Particle = {
+  x: number;
+  y: number;
+  velocity: number;
+};
+
+// Replace make2DArray with a function that creates an empty array
+const createParticleArray = () => {
   'worklet';
-  let arr = new Array(cols);
-  for (let i = 0; i < arr.length; i++) {
-    arr[i] = new Array(rows);
-    // Fill the array with 0s
-    for (let j = 0; j < arr[i].length; j++) {
-      arr[i][j] = 0;
-    }
-  }
-  return arr;
+  return [] as Particle[];
 };
 
 // How big is each square?
-let w = 5;
-let hueValue = 200;
+const w = 10;
 
 const textureSize = {
   width: w,
   height: w,
 };
 
-const gravity = 0.1;
+const gravity = 10;
 
 const {width, height} = Dimensions.get('window');
 const cols = Math.floor(width / w);
 const rows = Math.floor(height / w);
 
-const length = Math.min(cols * rows, 100);
+const length = cols * rows;
+
+// Add this constant at the top with other constants
+const MAX_MOVING_PARTICLES = 150;
 
 export const FallingSand: React.FC<FallingSandProps> = ({}) => {
-  const grid = useSharedValue(make2DArray(cols, rows));
-  const velocityGrid = useSharedValue(make2DArray(cols, rows));
-  const positionedGrid = useDerivedValue(() => {
-    let newGrid = [];
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        const isActive = grid.value[i][j] > 0;
-        if (isActive) {
-          newGrid.push({i, j});
-        }
-      }
+  const particles = useSharedValue<Particle[]>(createParticleArray());
+  const fixedParticles = useSharedValue<Particle[]>(createParticleArray());
+  const fixedParticlesPath = useDerivedValue(() => {
+    'worklet';
+    let path = '';
+    for (const particle of fixedParticles.value) {
+      const x = particle.x * w;
+      const y = particle.y * w;
+      path += `M ${x} ${y} h ${w} v ${w} h -${w} Z `;
     }
-    return newGrid;
-  }, [grid.value]);
+    return path;
+  });
+
+  // Update transforms to only handle moving particles
+  const transforms = useRSXformBuffer(MAX_MOVING_PARTICLES, (val, index) => {
+    'worklet';
+    const particle = particles.value[index];
+    if (particle) {
+      const x = particle.x * w;
+      const y = particle.y * w;
+      val.set(1, 0, x, y);
+    } else {
+      val.set(0, 0, 0, 0);
+    }
+  });
+
+  // Update sprites array to match moving particles
+  const sprites = useDerivedValue(() => {
+    'worklet';
+    return new Array(MAX_MOVING_PARTICLES)
+      .fill(0)
+      .map(() => rect(0, 0, textureSize.width, textureSize.height));
+  });
 
   // Check if a row is within the bounds
   const withinCols = (i: number) => {
@@ -75,144 +112,228 @@ export const FallingSand: React.FC<FallingSandProps> = ({}) => {
     return j >= 0 && j <= rows - 1;
   };
 
+  const update = (x: number, y: number) => {
+    'worklet';
+    const mouseCol = Math.floor(x / w);
+    const mouseRow = Math.floor(y / w);
+
+    if (withinCols(mouseCol) && withinRows(mouseRow)) {
+      // Only add new particle if we haven't reached the limit
+      if (particles.value.length < MAX_MOVING_PARTICLES) {
+        particles.value = [
+          ...particles.value,
+          {
+            x: mouseCol,
+            y: mouseRow,
+            velocity: 1,
+          },
+          {
+            x: mouseCol,
+            y: mouseRow + 1,
+            velocity: 1,
+          },
+          {
+            x: mouseCol,
+            y: mouseRow + 2,
+            velocity: 1,
+          },
+        ];
+      }
+    }
+  };
+
   const texture = useTexture(
-    <Rect height={w} width={w} color={'#fefefe'} />,
+    <Rect x={0} y={0} height={w} width={w} color={'#fefefe'} />,
     textureSize,
   );
 
-  const sprites = new Array(length)
-    .fill(0)
-    .map(() => rect(0, 0, textureSize.width, textureSize.height));
+  const longPressInterval = useSharedValue<AnimatedIntervalID>(-1);
+  const panInterval = useSharedValue<AnimatedIntervalID>(-1);
+  const panTimeout = useSharedValue<AnimatedTimeoutID>(-1);
+  const lastUpdate = useSharedValue({value: {x: 0, y: 0}, timestamp: 0});
 
-  const transforms = useRSXformBuffer(length, (val, index) => {
-    'worklet';
-    const pos = positionedGrid.value[index];
-    if (pos) {
-      const i = pos.i;
-      const j = pos.j;
+  const pan = Gesture.Pan()
+    .onUpdate(e => {
+      clearAnimatedInterval(panInterval.value);
+      clearAnimatedTimeout(panTimeout.value);
+      update(e.x, e.y);
+      lastUpdate.value = {value: {x: e.x, y: e.y}, timestamp: Date.now()};
+      panTimeout.value = setAnimatedTimeout(() => {
+        panInterval.value = setAnimatedInterval(() => {
+          update(e.x, e.y);
+        }, 10);
+      }, 30);
+    })
+    .onEnd(() => {
+      clearAnimatedInterval(panInterval.value);
+      clearAnimatedTimeout(panTimeout.value);
+    });
 
-      const x = i * w;
-      const y = j * w;
-
-      val.set(1, 0, x, y);
-    } else {
-      val.set(0, 0, 0, 0);
-    }
-  });
-
-  const update = (x: number, y: number) => {
-    'worklet';
-
-    let mouseCol = Math.floor(x / w);
-    let mouseRow = Math.floor(y / w);
-
-    let newGrid = grid.value;
-    let newVelocityGrid = velocityGrid.value;
-
-    // Randomly add an area of sand particles
-    let matrix = 1;
-    let extent = Math.floor(matrix / 2);
-    // for (let i = -extent; i <= extent; i++) {
-    //   for (let j = -extent; j <= extent; j++) {
-    //     if (Math.random() < 0.75) {
-    //       let col = mouseCol + i;
-    //       let row = mouseRow + j;
-    //       console.log(Date.now(), withinCols(col), withinRows(row));
-    //       if (withinCols(col) && withinRows(row)) {
-    //         newGrid[col][row] = hueValue;
-    //         newVelocityGrid[col][row] = 1;
-    //       }
-    //     }
-    //   }
-    // }
-    if (withinCols(mouseCol) && withinRows(mouseRow)) {
-      newGrid[mouseCol][mouseRow] = hueValue;
-      newVelocityGrid[mouseCol][mouseRow] = 1;
-    }
-    // Change the color of the sand over time
-    hueValue += 0.5;
-    if (hueValue > 360) {
-      hueValue = 1;
-    }
-
-    grid.value = newGrid;
-    velocityGrid.value = newVelocityGrid;
-  };
-
-  const pan = Gesture.Pan().onUpdate(e => {
-    update(e.x, e.y);
-  });
-
-  const longPress = Gesture.LongPress().onStart(e => {
-    update(e.x, e.y);
-  });
-  const tap = Gesture.Tap().onEnd(e => {
-    update(e.x, e.y);
-  });
+  const longPress = Gesture.LongPress()
+    .onStart(e => {
+      update(e.x, e.y);
+      longPressInterval.value = setAnimatedInterval(() => {
+        update(e.x, e.y);
+      }, 10);
+    })
+    .onEnd(() => {
+      clearAnimatedInterval(longPressInterval.value);
+    });
 
   useFrameCallback(() => {
-    // Create a 2D array for the next frame of animation
-    let nextGrid = make2DArray(cols, rows);
-    let nextVelocityGrid = make2DArray(cols, rows);
+    const nextParticles: Particle[] = [];
+    const newFixedParticles: Particle[] = [];
 
-    // Check every cell
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        // What is the state?
-        let state = grid.value[i][j];
-        let velocity = velocityGrid.value[i][j];
-        let moved = false;
-        if (state > 0) {
-          let newPos = Math.floor(j + velocity);
-          for (let y = newPos; y > j; y--) {
-            let below = grid.value[i][y];
-            let dir = 1;
-            if (Math.random() < 0.5) {
-              dir *= -1;
-            }
-            let belowA = -1;
-            let belowB = -1;
-            if (withinCols(i + dir)) {
-              belowA = grid.value[i + dir][y];
-            }
-            if (withinCols(i - dir)) {
-              belowB = grid.value[i - dir][y];
-            }
+    // Helper function to check occupation including nextParticles
+    const isPositionOccupied = (x: number, y: number) => {
+      'worklet';
+      return (
+        nextParticles.some(p => p.x === x && p.y === y) ||
+        fixedParticles.value.some(p => p.x === x && p.y === y)
+      );
+    };
 
-            if (below === 0) {
-              nextGrid[i][y] = state;
-              nextVelocityGrid[i][y] = velocity + gravity;
-              moved = true;
-              break;
-            } else if (belowA === 0) {
-              nextGrid[i + dir][y] = state;
-              nextVelocityGrid[i + dir][y] = velocity + gravity;
-              moved = true;
-              break;
-            } else if (belowB === 0) {
-              nextGrid[i - dir][y] = state;
-              nextVelocityGrid[i - dir][y] = velocity + gravity;
-              moved = true;
-              break;
-            }
-          }
-        }
+    // Process each particle
+    for (const particle of particles.value) {
+      // Only fix particles if they hit bottom or a fixed particle
+      if (particle.y >= rows - 1) {
+        newFixedParticles.push({
+          ...particle,
+          velocity: 0,
+        });
+        continue;
+      }
 
-        if (state > 0 && !moved) {
-          nextGrid[i][j] = grid.value[i][j];
-          nextVelocityGrid[i][j] = velocityGrid.value[i][j] + gravity;
-        }
+      const dir = Math.random() < 0.5 ? 1 : -1;
+
+      // Check if the space below is occupied by any particle (moving or fixed)
+      if (!isPositionOccupied(particle.x, particle.y + 1)) {
+        // Move straight down
+        nextParticles.push({
+          ...particle,
+          y: particle.y + 1,
+          velocity: particle.velocity + gravity,
+        });
+      }
+      // Try to slide diagonally
+      else if (
+        withinCols(particle.x + dir) &&
+        !isPositionOccupied(particle.x + dir, particle.y + 1)
+      ) {
+        nextParticles.push({
+          ...particle,
+          x: particle.x + dir,
+          y: particle.y + 1,
+          velocity: particle.velocity + gravity,
+        });
+      }
+      // Try to slide the other diagonal
+      else if (
+        withinCols(particle.x - dir) &&
+        !isPositionOccupied(particle.x - dir, particle.y + 1)
+      ) {
+        nextParticles.push({
+          ...particle,
+          x: particle.x - dir,
+          y: particle.y + 1,
+          velocity: particle.velocity + gravity,
+        });
+      }
+      // If can't move in any direction, check if it should be fixed
+      else if (
+        fixedParticles.value.some(
+          p => p.x === particle.x && p.y === particle.y + 1,
+        )
+      ) {
+        newFixedParticles.push({
+          ...particle,
+          velocity: 0,
+        });
+      }
+      // If still moving but temporarily blocked, keep in moving particles
+      else {
+        nextParticles.push(particle);
       }
     }
-    grid.value = nextGrid;
-    velocityGrid.value = nextVelocityGrid;
+
+    particles.value = nextParticles;
+    fixedParticles.value = [...fixedParticles.value, ...newFixedParticles];
   });
 
   const gesture = Gesture.Simultaneous(pan, longPress);
   return (
     <GestureDetector gesture={gesture}>
       <Canvas style={{width, height, backgroundColor: 'black'}}>
-        {/* <Atlas image={texture} sprites={sprites} transforms={transforms} /> */}
+        <Mask
+          mask={
+            <Group>
+              <Atlas
+                image={texture}
+                sprites={sprites.value}
+                transforms={transforms}
+              />
+              <Path path={fixedParticlesPath} color="white" />
+            </Group>
+          }>
+          <Rect x={0} y={0} width={width} height={height}>
+            <LinearGradient
+              start={vec(0, 0)}
+              end={vec(width, height)}
+              colors={[
+                // Reds to Oranges
+                '#FF0000',
+                '#FF1A00',
+                '#FF3300',
+                '#FF4D00',
+                '#FF6600',
+                // Oranges to Yellows
+                '#FF8000',
+                '#FF9900',
+                '#FFB300',
+                '#FFCC00',
+                '#FFE600',
+                // Yellows to Greens
+                '#FFFF00',
+                '#E6FF00',
+                '#CCFF00',
+                '#B3FF00',
+                '#99FF00',
+                // Greens to Teals
+                '#80FF00',
+                '#66FF00',
+                '#4DFF00',
+                '#33FF00',
+                '#1AFF00',
+                // Teals to Blues
+                '#00FF00',
+                '#00FF1A',
+                '#00FF33',
+                '#00FF4D',
+                '#00FF66',
+                // Blues to Indigos
+                '#00FF80',
+                '#00FF99',
+                '#00FFB3',
+                '#00FFCC',
+                '#00FFE6',
+                // Indigos to Violets
+                '#00FFFF',
+                '#00E6FF',
+                '#00CCFF',
+                '#00B3FF',
+                '#0099FF',
+                // Violets to Purples
+                '#0080FF',
+                '#0066FF',
+                '#004DFF',
+                '#0033FF',
+                '#001AFF',
+                // Back to Red (for smooth transition if looped)
+                '#FF0000',
+              ]}
+            />
+          </Rect>
+        </Mask>
       </Canvas>
     </GestureDetector>
   );
