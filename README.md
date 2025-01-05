@@ -38,9 +38,17 @@ https://github.com/AlirezaHadjar/react-native-creative-animations/assets/5719240
 
 https://github.com/user-attachments/assets/b2e348a5-df90-49c7-91bf-4ec69daf52fb
 
-## 🎉 Confetti
+## 🎉 Confetti (Atlas API)
 [Source Code](https://github.com/AlirezaHadjar/react-native-crafty-animations/blob/main/src/Examples/Confetti/Confetti.tsx)
 
 https://github.com/user-attachments/assets/cff6aec3-e914-4936-9182-beb25e75142b
+
+## 🏖️ Falling Sand (Atlas API)
+[Source Code](https://github.com/AlirezaHadjar/react-native-crafty-animations/blob/main/src/Examples/FallingSand/FallingSand.tsx)
+
+https://github.com/user-attachments/assets/97f4f966-69c6-4bf6-86da-f129bbd9b917
+
+
+
 
 
