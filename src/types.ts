@@ -10,4 +10,5 @@ export type StackParamList = {
   Lighter: undefined;
   RotatingCharacters: undefined;
   Confetti: undefined;
+  FallingSand: undefined;
 };
